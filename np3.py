@@ -84,7 +84,7 @@ def inline_query(update, context):
             "title": "Max Verstappen!"
         },
         {
-            "file_id": "QACAgIAAxkBAAMwaSrHf0jnIQQFGhcLcKT0CXLCR2kAApCHAAKi3llJKlOhakkY4YI2BA",
+            "file_id": "CQACAgIAAxkBAAMwaSrHf0jnIQQFGhcLcKT0CXLCR2kAApCHAAKi3llJKlOhakkY4YI2BA",
             "title": "Rizz"
         },
         # {
