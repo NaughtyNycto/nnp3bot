@@ -1,5 +1,5 @@
 from telegram.ext import Updater, InlineQueryHandler, MessageHandler, Filters
-from telegram import InlineQueryResultCachedAudio
+from telegram import InlineQueryResultCachedAudio, InputTextMessageContent, InlineQueryResultArticle
 import uuid
 
 TOKEN = "8564254577:AAE-gPiwA3WZSWjiuj_K0ppZcYC0MefH6T8"
@@ -126,6 +126,21 @@ def inline_query(update, context):
     ]
 
     results = []
+
+    results.append(
+        InlineQueryResultArticle(
+            id="banner",
+            title="Made by @NaughtyNycto",
+            description="you know what?",
+            thumb_url="https://raw.githubusercontent.com/NaughtyNycto/sources/main/Robloxface.jpg"
+,  # 🔥 your image here
+            thumb_width=80,
+            thumb_height=80,
+            input_message_content=InputTextMessageContent(
+                "Hey I am an unemployed teenager who is pursuing in a CS major. I hope you liked my bot."
+            )
+        )
+    )
 
     # Show full catalogue when query is empty
     if query.strip() == "":
