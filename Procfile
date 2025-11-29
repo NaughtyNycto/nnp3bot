@@ -1,1 +1,1 @@
-worker: python np3.py
+start: python np3.py
