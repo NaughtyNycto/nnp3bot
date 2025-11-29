@@ -137,7 +137,7 @@ def inline_query(update, context):
             thumb_width=80,
             thumb_height=80,
             input_message_content=InputTextMessageContent(
-                "Hey I am an unemployed teenager who is pursuing in a CS major. I hope you liked my bot. \n \n 5614681253742161 - in case if you want to muy me a shawarma :)"
+                "Hey I am an unemployed teenager who is pursuing in a CS major. I hope you liked my bot. \n \n 5614681253742161 - in case if you want to buy me a shawarma :)"
             )
         )
     )
