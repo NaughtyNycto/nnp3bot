@@ -1,6 +1,8 @@
 import logging
 import os
 import uuid
+from threading import Thread
+from flask import Flask
 
 from telegram import (
     InlineQueryResultCachedAudio,
@@ -27,100 +29,56 @@ logging.basicConfig(
 )
 logger = logging.getLogger(__name__)
 
+
+# ========================
+#  Tiny Flask Server (required for Render Web Service)
+# ========================
+
+app = Flask(__name__)
+
+@app.route("/")
+def home():
+    return "Bot is running!", 200
+
+
+def run_flask():
+    port = int(os.environ.get("PORT", 8000))
+    app.run(host="0.0.0.0", port=port)
+
+
 # ========================
 #  DATA
 # ========================
 
 SOUNDS = [
-    {
-        "file_id": "CQACAgIAAxkBAAMGaSqjRDH77ALBsibed5HTHlYw0oIAAqmFAAKi3llJFbZjNlCOp9o2BA",
-        "title": "Cat LOL",
-    },
-    {
-        "file_id": "CQACAgIAAxkBAAMOaSqoVpdX3TivTEiCMz7NPbhLg6MAAvOFAAKi3llJDg9xZ1Mping2BA",
-        "title": "JOB!",
-    },
-    {
-        "file_id": "CQACAgIAAxkBAAMKaSqkjmrn-Q5duFQGTryltz_ZMdoAAruFAAKi3llJvurud_ExIaA2BA",
-        "title": "Cooked Dog",
-    },
-    {
-        "file_id": "CQACAgIAAxkBAAMSaSq_UWLVIe4Er8D7uMLnq-0OsjwAAi2HAAKi3llJfOM7cxy5YV42BA",
-        "title": "The biggest piece of dogshit",
-    },
-    {
-        "file_id": "CQACAgIAAxkBAAMUaSrARreEdVcZB7_qoZy24OEMYNoAAjOHAAKi3llJlQJXtzCTPNY2BA",
-        "title": "What??",
-    },
-    {
-        "file_id": "CQACAgIAAxkBAAMWaSrAm-JCaIDnkb6IcNKVA5RXt0MAAjeHAAKi3llJ3LQ401uHyYI2BA",
-        "title": "Lego Batman",
-    },
-    {
-        "file_id": "CQACAgIAAxkBAAMYaSrBScuWFwxCaWRS1H3R2PHg4NAAAjyHAAKi3llJqYV8NexmENo2BA",
-        "title": "Dexter SUS",
-    },
-    {
-        "file_id": "CQACAgIAAxkBAAMaaSrB4hFbnrAOogjO0jjz4V6CRHYAAkKHAAKi3llJs3opDhF8ro02BA",
-        "title": "BLYAA!",
-    },
-    {
-        "file_id": "CQACAgIAAxkBAAMcaSrCNoeIUSlKz-acWNwm01ZAZmYAAkmHAAKi3llJGLEuPiFxJgI2BA",
-        "title": "Choineese",
-    },
-    {
-        "file_id": "CQACAgIAAxkBAAMeaSrClubOsWueDXfgS4SdevwuzykAAkyHAAKi3llJyy45E6icQbM2BA",
-        "title": "Metroman",
-    },
-    {
-        "file_id": "CQACAgIAAxkBAAMgaSrDBNSjrP1cF3gBEkfnxGBM6xAAAk-HAAKi3llJZGMQ8G1Bw2s2BA",
-        "title": "Vine BOOM!",
-    },
-    {
-        "file_id": "CQACAgIAAxkBAAMiaSrDTCGDhJCFzM3rONdUv57U34MAAlGHAAKi3llJxguolQNsv_c2BA",
-        "title": "Among Us",
-    },
-    {
-        "file_id": "CQACAgIAAxkBAAMkaSrEAz_idsFRl6j8EdIdstpadJUAAleHAAKi3llJc92YMcwCqtc2BA",
-        "title": "Putin",
-    },
-    {
-        "file_id": "CQACAgIAAxkBAAMmaSrEniSRr8NVQyoh48ItmxFi8zQAAl-HAAKi3llJ5iHkOcrukGg2BA",
-        "title": "Gae!",
-    },
-    {
-        "file_id": "CQACAgIAAxkBAAMoaSrFdyP6K4MM8KNwNGdVLCaUXmAAAmeHAAKi3llJUWxawD4v1S82BA",
-        "title": "Oh hell nah, man!",
-    },
-    {
-        "file_id": "CQACAgIAAxkBAAMqaSrF59uacEuGMLOQV9a3BOsnQK4AAnKHAAKi3llJzPK5gPPtkKw2BA",
-        "title": "***",
-    },
-    {
-        "file_id": "CQACAgIAAxkBAAMsaSrGcBVL0m3F0iDq5rXAtgzfHVkAAn2HAAKi3llJ6B2VLLjDbCA2BA",
-        "title": "GTA 5 | Wasted",
-    },
-    {
-        "file_id": "CQACAgIAAxkBAAMuaSrG9LZmrOBZxfjUAgMl1wtdkzIAAoSHAAKi3llJoCCzlB0sFbs2BA",
-        "title": "Max Verstappen!",
-    },
-    {
-        "file_id": "CQACAgIAAxkBAAMwaSrHf0jnIQQFGhcLcKT0CXLCR2kAApCHAAKi3llJKlOhakkY4YI2BA",
-        "title": "Rizz",
-    },
-    {
-        "file_id": "CQACAgIAAxkBAAM6aStDofRBu5Z6eCOI2NubikanFR4AAiKQAAKi3llJZsl3bpg4IpA2BA",
-        "title": "Can you give me one more day?",
-    },
+    {"file_id": "CQACAgIAAxkBAAMGaSqjRDH77ALBsibed5HTHlYw0oIAAqmFAAKi3llJFbZjNlCOp9o2BA", "title": "Cat LOL"},
+    {"file_id": "CQACAgIAAxkBAAMOaSqoVpdX3TivTEiCMz7NPbhLg6MAAvOFAAKi3llJDg9xZ1Mping2BA", "title": "JOB!"},
+    {"file_id": "CQACAgIAAxkBAAMKaSqkjmrn-Q5duFQGTryltz_ZMdoAAruFAAKi3llJvurud_ExIaA2BA", "title": "Cooked Dog"},
+    {"file_id": "CQACAgIAAxkBAAMSaSq_UWLVIe4Er8D7uMLnq-0OsjwAAi2HAAKi3llJfOM7cxy5YV42BA", "title": "The biggest piece of dogshit"},
+    {"file_id": "CQACAgIAAxkBAAMUaSrARreEdVcZB7_qoZy24OEMYNoAAjOHAAKi3llJlQJXtzCTPNY2BA", "title": "What??"},
+    {"file_id": "CQACAgIAAxkBAAMWaSrAm-JCaIDnkb6IcNKVA5RXt0MAAjeHAAKi3llJ3LQ401uHyYI2BA", "title": "Lego Batman"},
+    {"file_id": "CQACAgIAAxkBAAMYaSrBScuWFwxCaWRS1H3R2PHg4NAAAjyHAAKi3llJqYV8NexmENo2BA", "title": "Dexter SUS"},
+    {"file_id": "CQACAgIAAxkBAAMaaSrB4hFbnrAOogjO0jjz4V6CRHYAAkKHAAKi3llJs3opDhF8ro02BA", "title": "BLYAA!"},
+    {"file_id": "CQACAgIAAxkBAAMcaSrCNoeIUSlKz-acWNwm01ZAZmYAAkmHAAKi3llJGLEuPiFxJgI2BA", "title": "Choineese"},
+    {"file_id": "CQACAgIAAxkBAAMeaSrClubOsWueDXfgS4SdevwuzykAAkyHAAKi3llJyy45E6icQbM2BA", "title": "Metroman"},
+    {"file_id": "CQACAgIAAxkBAAMgaSrDBNSjrP1cF3gBEkfnxGBM6xAAAk-HAAKi3llJZGMQ8G1Bw2s2BA", "title": "Vine BOOM!"},
+    {"file_id": "CQACAgIAAxkBAAMiaSrDTCGDhJCFzM3rONdUv57U34MAAlGHAAKi3llJxguolQNsv_c2BA", "title": "Among Us"},
+    {"file_id": "CQACAgIAAxkBAAMkaSrEAz_idsFRl6j8EdIdstpadJUAAleHAAKi3llJc92YMcwCqtc2BA", "title": "Putin"},
+    {"file_id": "CQACAgIAAxkBAAMmaSrEniSRr8NVQyoh48ItmxFi8zQAAl-HAAKi3llJ5iHkOcrukGg2BA", "title": "Gae!"},
+    {"file_id": "CQACAgIAAxkBAAMoaSrFdyP6K4MM8KNwNGdVLCaUXmAAAmeHAAKi3llJUWxawD4v1S82BA", "title": "Oh hell nah, man!"},
+    {"file_id": "CQACAgIAAxkBAAMqaSrF59uacEuGMLOQV9a3BOsnQK4AAnKHAAKi3llJzPK5gPPtkKw2BA", "title": "***"},
+    {"file_id": "CQACAgIAAxkBAAMsaSrGcBVL0m3F0iDq5rXAtgzfHVkAAn2HAAKi3llJ6B2VLLjDbCA2BA", "title": "GTA 5 | Wasted"},
+    {"file_id": "CQACAgIAAxkBAAMuaSrG9LZmrOBZxfjUAgMl1wtdkzIAAoSHAAKi3llJoCCzlB0sFbs2BA", "title": "Max Verstappen!"},
+    {"file_id": "CQACAgIAAxkBAAMwaSrHf0jnIQQFGhcLcKT0CXLCR2kAApCHAAKi3llJKlOhakkY4YI2BA", "title": "Rizz"},
+    {"file_id": "CQACAgIAAxkBAAM6aStDofRBu5Z6eCOI2NubikanFR4AAiKQAAKi3llJZsl3bpg4IpA2BA", "title": "Can you give me one more day?"},
 ]
+
 
 # ========================
 #  HANDLERS
 # ========================
 
-
-def inline_query(update: Update, context: CallbackContext) -> None:
-    """Handle inline queries quickly and safely."""
+def inline_query(update: Update, context: CallbackContext):
     query = (update.inline_query.query or "").strip().lower()
     results = []
 
@@ -131,23 +89,14 @@ def inline_query(update: Update, context: CallbackContext) -> None:
             title="Made by @NaughtyNycto",
             description="you know what?",
             thumb_url="https://raw.githubusercontent.com/NaughtyNycto/sources/main/Robloxface.jpg",
-            thumb_width=80,
-            thumb_height=80,
             input_message_content=InputTextMessageContent(
-                "Hey I am an unemployed teenager who is pursuing in a CS major. "
-                "I hope you liked my bot.\n\n"
-                "5614681253742161 - in case if you want to buy me a shawarma :)"
+                "Hey! I hope you liked my bot.\n\n5614681253742161 - buy me a shawarma :)"
             ),
         )
     )
 
-    # Full catalogue when query is empty
-    if not query:
-        matched_sounds = SOUNDS
-    else:
-        matched_sounds = [
-            s for s in SOUNDS if query in s["title"].lower()
-        ]
+    # Filter
+    matched_sounds = [s for s in SOUNDS if query in s["title"].lower()] if query else SOUNDS
 
     for s in matched_sounds:
         results.append(
@@ -159,42 +108,32 @@ def inline_query(update: Update, context: CallbackContext) -> None:
         )
 
     try:
-        # cache_time>0 and drop_pending_updates in main help avoid "query is too old"
         update.inline_query.answer(results, cache_time=10, is_personal=True)
     except BadRequest as e:
-        # This is the error you saw in logs; we now swallow it safely
         if "Query is too old" in str(e):
-            logger.warning("Ignored old inline query: %s", e)
+            logger.warning("Ignored expired query.")
         else:
-            logger.exception("BadRequest while answering inline query: %s", e)
+            logger.exception(e)
 
 
-def get_file_id(update: Update, context: CallbackContext) -> None:
-    """Helper to collect file_ids when you send audio/voice to the bot."""
+def get_file_id(update: Update, context: CallbackContext):
     audio = update.message.audio or update.message.voice
     if audio:
-        logger.info("Received file_id: %s", audio.file_id)
         update.message.reply_text(f"Saved file_id: {audio.file_id}")
 
 
-def error_handler(update: object, context: CallbackContext) -> None:
-    """Global error handler so exceptions don't kill the process."""
-    logger.exception("Exception while handling an update: %s", context.error)
+def error_handler(update, context):
+    logger.error(f"Error: {context.error}")
 
 
 # ========================
-#  MAIN
+#  START BOT + FLASK
 # ========================
 
-
-def main() -> None:
-    # Read token from environment variable
+def run_bot():
     token = os.getenv("BOT_TOKEN")
     if not token:
-        raise RuntimeError(
-            "BOT_TOKEN environment variable is not set. "
-            "Set it in Render dashboard."
-        )
+        raise RuntimeError("BOT_TOKEN not set!")
 
     updater = Updater(token, use_context=True)
     dp = updater.dispatcher
@@ -203,12 +142,13 @@ def main() -> None:
     dp.add_handler(MessageHandler(Filters.audio | Filters.voice, get_file_id))
     dp.add_error_handler(error_handler)
 
-    logger.info("Bot is starting (long polling)...")
-
-    # drop_pending_updates avoids old/expired inline queries on startup
     updater.start_polling(drop_pending_updates=True)
     updater.idle()
 
 
 if __name__ == "__main__":
-    main()
+    # Run Flask in a separate thread
+    Thread(target=run_flask).start()
+
+    # Run Telegram bot normally
+    run_bot()
