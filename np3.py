@@ -1,194 +1,214 @@
-from telegram.ext import Updater, InlineQueryHandler, MessageHandler, Filters
-from telegram import InlineQueryResultCachedAudio, InputTextMessageContent, InlineQueryResultArticle
+import logging
+import os
 import uuid
 
-TOKEN = "8564254577:AAE-gPiwA3WZSWjiuj_K0ppZcYC0MefH6T8"
+from telegram import (
+    InlineQueryResultCachedAudio,
+    InlineQueryResultArticle,
+    InputTextMessageContent,
+    Update,
+)
+from telegram.ext import (
+    Updater,
+    InlineQueryHandler,
+    MessageHandler,
+    Filters,
+    CallbackContext,
+)
+from telegram.error import BadRequest
+
+# ========================
+#  Logging
+# ========================
+
+logging.basicConfig(
+    format="%(asctime)s - %(name)s - %(levelname)s - %(message)s",
+    level=logging.INFO,
+)
+logger = logging.getLogger(__name__)
+
+# ========================
+#  DATA
+# ========================
+
+SOUNDS = [
+    {
+        "file_id": "CQACAgIAAxkBAAMGaSqjRDH77ALBsibed5HTHlYw0oIAAqmFAAKi3llJFbZjNlCOp9o2BA",
+        "title": "Cat LOL",
+    },
+    {
+        "file_id": "CQACAgIAAxkBAAMOaSqoVpdX3TivTEiCMz7NPbhLg6MAAvOFAAKi3llJDg9xZ1Mping2BA",
+        "title": "JOB!",
+    },
+    {
+        "file_id": "CQACAgIAAxkBAAMKaSqkjmrn-Q5duFQGTryltz_ZMdoAAruFAAKi3llJvurud_ExIaA2BA",
+        "title": "Cooked Dog",
+    },
+    {
+        "file_id": "CQACAgIAAxkBAAMSaSq_UWLVIe4Er8D7uMLnq-0OsjwAAi2HAAKi3llJfOM7cxy5YV42BA",
+        "title": "The biggest piece of dogshit",
+    },
+    {
+        "file_id": "CQACAgIAAxkBAAMUaSrARreEdVcZB7_qoZy24OEMYNoAAjOHAAKi3llJlQJXtzCTPNY2BA",
+        "title": "What??",
+    },
+    {
+        "file_id": "CQACAgIAAxkBAAMWaSrAm-JCaIDnkb6IcNKVA5RXt0MAAjeHAAKi3llJ3LQ401uHyYI2BA",
+        "title": "Lego Batman",
+    },
+    {
+        "file_id": "CQACAgIAAxkBAAMYaSrBScuWFwxCaWRS1H3R2PHg4NAAAjyHAAKi3llJqYV8NexmENo2BA",
+        "title": "Dexter SUS",
+    },
+    {
+        "file_id": "CQACAgIAAxkBAAMaaSrB4hFbnrAOogjO0jjz4V6CRHYAAkKHAAKi3llJs3opDhF8ro02BA",
+        "title": "BLYAA!",
+    },
+    {
+        "file_id": "CQACAgIAAxkBAAMcaSrCNoeIUSlKz-acWNwm01ZAZmYAAkmHAAKi3llJGLEuPiFxJgI2BA",
+        "title": "Choineese",
+    },
+    {
+        "file_id": "CQACAgIAAxkBAAMeaSrClubOsWueDXfgS4SdevwuzykAAkyHAAKi3llJyy45E6icQbM2BA",
+        "title": "Metroman",
+    },
+    {
+        "file_id": "CQACAgIAAxkBAAMgaSrDBNSjrP1cF3gBEkfnxGBM6xAAAk-HAAKi3llJZGMQ8G1Bw2s2BA",
+        "title": "Vine BOOM!",
+    },
+    {
+        "file_id": "CQACAgIAAxkBAAMiaSrDTCGDhJCFzM3rONdUv57U34MAAlGHAAKi3llJxguolQNsv_c2BA",
+        "title": "Among Us",
+    },
+    {
+        "file_id": "CQACAgIAAxkBAAMkaSrEAz_idsFRl6j8EdIdstpadJUAAleHAAKi3llJc92YMcwCqtc2BA",
+        "title": "Putin",
+    },
+    {
+        "file_id": "CQACAgIAAxkBAAMmaSrEniSRr8NVQyoh48ItmxFi8zQAAl-HAAKi3llJ5iHkOcrukGg2BA",
+        "title": "Gae!",
+    },
+    {
+        "file_id": "CQACAgIAAxkBAAMoaSrFdyP6K4MM8KNwNGdVLCaUXmAAAmeHAAKi3llJUWxawD4v1S82BA",
+        "title": "Oh hell nah, man!",
+    },
+    {
+        "file_id": "CQACAgIAAxkBAAMqaSrF59uacEuGMLOQV9a3BOsnQK4AAnKHAAKi3llJzPK5gPPtkKw2BA",
+        "title": "***",
+    },
+    {
+        "file_id": "CQACAgIAAxkBAAMsaSrGcBVL0m3F0iDq5rXAtgzfHVkAAn2HAAKi3llJ6B2VLLjDbCA2BA",
+        "title": "GTA 5 | Wasted",
+    },
+    {
+        "file_id": "CQACAgIAAxkBAAMuaSrG9LZmrOBZxfjUAgMl1wtdkzIAAoSHAAKi3llJoCCzlB0sFbs2BA",
+        "title": "Max Verstappen!",
+    },
+    {
+        "file_id": "CQACAgIAAxkBAAMwaSrHf0jnIQQFGhcLcKT0CXLCR2kAApCHAAKi3llJKlOhakkY4YI2BA",
+        "title": "Rizz",
+    },
+    {
+        "file_id": "CQACAgIAAxkBAAM6aStDofRBu5Z6eCOI2NubikanFR4AAiKQAAKi3llJZsl3bpg4IpA2BA",
+        "title": "Can you give me one more day?",
+    },
+]
+
+# ========================
+#  HANDLERS
+# ========================
 
 
-# Inline query handler
-def inline_query(update, context):
-    query = update.inline_query.query.lower()
-
-    # FULL LIST OF YOUR SOUNDS
-    sounds = [
-        {
-            "file_id": "CQACAgIAAxkBAAMGaSqjRDH77ALBsibed5HTHlYw0oIAAqmFAAKi3llJFbZjNlCOp9o2BA",
-            "title": "Cat LOL"
-        },
-        {
-            "file_id": "CQACAgIAAxkBAAMOaSqoVpdX3TivTEiCMz7NPbhLg6MAAvOFAAKi3llJDg9xZ1Mping2BA",
-            "title": "JOB!"
-        },
-        {
-            "file_id": "CQACAgIAAxkBAAMKaSqkjmrn-Q5duFQGTryltz_ZMdoAAruFAAKi3llJvurud_ExIaA2BA",
-            "title": "Cooked Dog"
-        },
-        {
-            "file_id": "CQACAgIAAxkBAAMSaSq_UWLVIe4Er8D7uMLnq-0OsjwAAi2HAAKi3llJfOM7cxy5YV42BA",
-            "title": "The biggest piece of dogshit"
-        },
-        {
-            "file_id": "CQACAgIAAxkBAAMUaSrARreEdVcZB7_qoZy24OEMYNoAAjOHAAKi3llJlQJXtzCTPNY2BA",
-            "title": "What??"
-        },
-        {
-            "file_id": "CQACAgIAAxkBAAMWaSrAm-JCaIDnkb6IcNKVA5RXt0MAAjeHAAKi3llJ3LQ401uHyYI2BA",
-            "title": "Lego Batman"
-        },
-        {
-            "file_id": "CQACAgIAAxkBAAMYaSrBScuWFwxCaWRS1H3R2PHg4NAAAjyHAAKi3llJqYV8NexmENo2BA",
-            "title": "Dexter SUS"
-        },
-        {
-            "file_id": "CQACAgIAAxkBAAMaaSrB4hFbnrAOogjO0jjz4V6CRHYAAkKHAAKi3llJs3opDhF8ro02BA",
-            "title": "BLYAA!"
-        },
-        {
-            "file_id": "CQACAgIAAxkBAAMcaSrCNoeIUSlKz-acWNwm01ZAZmYAAkmHAAKi3llJGLEuPiFxJgI2BA",
-            "title": "Choineese"
-        },
-        {
-            "file_id": "CQACAgIAAxkBAAMeaSrClubOsWueDXfgS4SdevwuzykAAkyHAAKi3llJyy45E6icQbM2BA",
-            "title": "Metroman"
-        },
-        {
-            "file_id": "CQACAgIAAxkBAAMgaSrDBNSjrP1cF3gBEkfnxGBM6xAAAk-HAAKi3llJZGMQ8G1Bw2s2BA",
-            "title": "Vine BOOM!"
-        },
-        {
-            "file_id": "CQACAgIAAxkBAAMiaSrDTCGDhJCFzM3rONdUv57U34MAAlGHAAKi3llJxguolQNsv_c2BA",
-            "title": "Among Us"
-        },
-        {
-            "file_id": "CQACAgIAAxkBAAMkaSrEAz_idsFRl6j8EdIdstpadJUAAleHAAKi3llJc92YMcwCqtc2BA",
-            "title": "Putin"
-        },
-        {
-            "file_id": "CQACAgIAAxkBAAMmaSrEniSRr8NVQyoh48ItmxFi8zQAAl-HAAKi3llJ5iHkOcrukGg2BA",
-            "title": "Gae!"
-        },
-        {
-            "file_id": "CQACAgIAAxkBAAMoaSrFdyP6K4MM8KNwNGdVLCaUXmAAAmeHAAKi3llJUWxawD4v1S82BA",
-            "title": "Oh hell nah, man!"
-        },
-        {
-            "file_id": "CQACAgIAAxkBAAMqaSrF59uacEuGMLOQV9a3BOsnQK4AAnKHAAKi3llJzPK5gPPtkKw2BA",
-            "title": "***"
-        },
-        {
-            "file_id": "CQACAgIAAxkBAAMsaSrGcBVL0m3F0iDq5rXAtgzfHVkAAn2HAAKi3llJ6B2VLLjDbCA2BA",
-            "title": "GTA 5 | Wasted"
-        },
-        {
-            "file_id": "CQACAgIAAxkBAAMuaSrG9LZmrOBZxfjUAgMl1wtdkzIAAoSHAAKi3llJoCCzlB0sFbs2BA",
-            "title": "Max Verstappen!"
-        },
-        {
-            "file_id": "CQACAgIAAxkBAAMwaSrHf0jnIQQFGhcLcKT0CXLCR2kAApCHAAKi3llJKlOhakkY4YI2BA",
-            "title": "Rizz"
-        },
-        {
-            "file_id": "CQACAgIAAxkBAAM6aStDofRBu5Z6eCOI2NubikanFR4AAiKQAAKi3llJZsl3bpg4IpA2BA",
-            "title": "Can you give me one more day?"
-        },
-        # {
-        #     "file_id": "",
-        #     "title": ""
-        # },
-        # {
-        #     "file_id": "",
-        #     "title": ""
-        # },
-        # {
-        #     "file_id": "",
-        #     "title": ""
-        # },
-        # {
-        #     "file_id": "",
-        #     "title": ""
-        # },
-        # {
-        #     "file_id": "",
-        #     "title": ""
-        # },
-        # {
-        #     "file_id": "",
-        #     "title": ""
-        # },
-        # {
-        #     "file_id": "",
-        #     "title": ""
-        # },
-        # {
-        #     "file_id": "",
-        #     "title": ""
-        # },
-    ]
-
+def inline_query(update: Update, context: CallbackContext) -> None:
+    """Handle inline queries quickly and safely."""
+    query = (update.inline_query.query or "").strip().lower()
     results = []
 
+    # Banner
     results.append(
         InlineQueryResultArticle(
             id="banner",
             title="Made by @NaughtyNycto",
             description="you know what?",
-            thumb_url="https://raw.githubusercontent.com/NaughtyNycto/sources/main/Robloxface.jpg"
-,  # 🔥 your image here
+            thumb_url="https://raw.githubusercontent.com/NaughtyNycto/sources/main/Robloxface.jpg",
             thumb_width=80,
             thumb_height=80,
             input_message_content=InputTextMessageContent(
-                "Hey I am an unemployed teenager who is pursuing in a CS major. I hope you liked my bot. \n \n 5614681253742161 - in case if you want to buy me a shawarma :)"
-            )
+                "Hey I am an unemployed teenager who is pursuing in a CS major. "
+                "I hope you liked my bot.\n\n"
+                "5614681253742161 - in case if you want to buy me a shawarma :)"
+            ),
         )
     )
 
-    # Show full catalogue when query is empty
-    if query.strip() == "":
-        for s in sounds:
-            results.append(
-                InlineQueryResultCachedAudio(
-                    id=str(uuid.uuid4()),
-                    audio_file_id=s["file_id"],
-                    title=s["title"]
-                )
-            )
-
-    # If user typed a search keyword
+    # Full catalogue when query is empty
+    if not query:
+        matched_sounds = SOUNDS
     else:
-        for s in sounds:
-            if query in s["title"].lower():
-                results.append(
-                    InlineQueryResultCachedAudio(
-                        id=str(uuid.uuid4()),
-                        audio_file_id=s["file_id"],
-                        title=s["title"]
-                    )
-                )
+        matched_sounds = [
+            s for s in SOUNDS if query in s["title"].lower()
+        ]
 
-    update.inline_query.answer(results, cache_time=1)
+    for s in matched_sounds:
+        results.append(
+            InlineQueryResultCachedAudio(
+                id=str(uuid.uuid4()),
+                audio_file_id=s["file_id"],
+                title=s["title"],
+            )
+        )
+
+    try:
+        # cache_time>0 and drop_pending_updates in main help avoid "query is too old"
+        update.inline_query.answer(results, cache_time=10, is_personal=True)
+    except BadRequest as e:
+        # This is the error you saw in logs; we now swallow it safely
+        if "Query is too old" in str(e):
+            logger.warning("Ignored old inline query: %s", e)
+        else:
+            logger.exception("BadRequest while answering inline query: %s", e)
 
 
-# Collect FILE IDs (when you upload new audios)
-def get_file_id(update, context):
+def get_file_id(update: Update, context: CallbackContext) -> None:
+    """Helper to collect file_ids when you send audio/voice to the bot."""
     audio = update.message.audio or update.message.voice
     if audio:
-        print("\nFILE ID:", audio.file_id, "\n")
+        logger.info("Received file_id: %s", audio.file_id)
         update.message.reply_text(f"Saved file_id: {audio.file_id}")
 
 
-# 🚀 MAIN FUNCTION — THIS STARTS THE BOT
-def main():
-    updater = Updater(TOKEN, use_context=True)
+def error_handler(update: object, context: CallbackContext) -> None:
+    """Global error handler so exceptions don't kill the process."""
+    logger.exception("Exception while handling an update: %s", context.error)
+
+
+# ========================
+#  MAIN
+# ========================
+
+
+def main() -> None:
+    # Read token from environment variable
+    token = os.getenv("BOT_TOKEN")
+    if not token:
+        raise RuntimeError(
+            "BOT_TOKEN environment variable is not set. "
+            "Set it in Render dashboard."
+        )
+
+    updater = Updater(token, use_context=True)
     dp = updater.dispatcher
 
     dp.add_handler(InlineQueryHandler(inline_query))
     dp.add_handler(MessageHandler(Filters.audio | Filters.voice, get_file_id))
+    dp.add_error_handler(error_handler)
 
-    print("Bot is running...")
-    updater.start_polling()
+    logger.info("Bot is starting (long polling)...")
+
+    # drop_pending_updates avoids old/expired inline queries on startup
+    updater.start_polling(drop_pending_updates=True)
     updater.idle()
 
 
-# 🚀 Needed to run the bot
 if __name__ == "__main__":
     main()
