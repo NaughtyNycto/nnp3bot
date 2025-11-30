@@ -90,7 +90,10 @@ def inline_query(update: Update, context: CallbackContext):
             description="you know what?",
             thumb_url="https://raw.githubusercontent.com/NaughtyNycto/sources/main/Robloxface.jpg",
             input_message_content=InputTextMessageContent(
-                "Hey! I hope you liked my bot.\n\n5614681253742161 - buy me a shawarma :)"
+                'Hey! I am an <a href="https://t.me/naughtynycto">unemployed teenager</a>, '
+                'who is pursuing a CS major. I hope you liked my bot.\n\n'
+                '5614681253742161 - in case if you want to buy me a shawarma :)',
+                parse_mode="HTML"
             ),
         )
     )
