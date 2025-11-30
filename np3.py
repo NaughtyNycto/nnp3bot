@@ -71,6 +71,19 @@ SOUNDS = [
     {"file_id": "CQACAgIAAxkBAAMuaSrG9LZmrOBZxfjUAgMl1wtdkzIAAoSHAAKi3llJoCCzlB0sFbs2BA", "title": "Max Verstappen!"},
     {"file_id": "CQACAgIAAxkBAAMwaSrHf0jnIQQFGhcLcKT0CXLCR2kAApCHAAKi3llJKlOhakkY4YI2BA", "title": "Rizz"},
     {"file_id": "CQACAgIAAxkBAAM6aStDofRBu5Z6eCOI2NubikanFR4AAiKQAAKi3llJZsl3bpg4IpA2BA", "title": "Can you give me one more day?"},
+    {"file_id": "CQACAgIAAxkBAANCaSv4m6Q3wsXrP4bfuGHWgYsu0twAAguMAAL58mBJvrqlmrPXpe82BA", "title": "Um, what the actual fuck you doing in my house?"},
+    {"file_id": "CQACAgIAAxkBAANEaSv5Pc8PbeMugmpwGGiW62ptskMAAhqMAAL58mBJgKQk8FC_EIk2BA", "title": "What the fuck is this? (British)"},
+    {"file_id": "CQACAgIAAxkBAANGaSv58NvwaTcpZ2joNLSFbZLT9ScAAh6MAAL58mBJyzGxdQeKS6o2BA", "title": "Planktone"},
+    {"file_id": "CQACAgIAAxkBAANIaSv6ijn_8iFW-tzTxcnQNrP_kX0AAieMAAL58mBJeUqlBJkbGKs2BA", "title": "RDR2 | Low honor"},
+    {"file_id": "CQACAgIAAxkBAANKaSv7QwOPOWZNeVRAZbs8tXIpyewAAi2MAAL58mBJJ8CzYz7lwdA2BA", "title": "It was perfect!"},
+    {"file_id": "CQACAgIAAxkBAANNaSv88YYl43bD-ikjoTpe4U43-GAAAjiMAAL58mBJgpIg_pTNi3A2BA", "title": "Kurt Angle"},
+    # {"file_id": "", "title": ""},
+    # {"file_id": "", "title": ""},
+    # {"file_id": "", "title": ""},
+    # {"file_id": "", "title": ""},
+    # {"file_id": "", "title": ""},
+    # {"file_id": "", "title": ""},
+    # {"file_id": "", "title": ""},
 ]
 
 
