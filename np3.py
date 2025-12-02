@@ -1,8 +1,6 @@
 import logging
 import os
 import uuid
-from threading import Thread
-from flask import Flask
 
 from telegram import (
     InlineQueryResultCachedAudio,
@@ -28,23 +26,6 @@ logging.basicConfig(
     level=logging.INFO,
 )
 logger = logging.getLogger(__name__)
-
-
-# ========================
-#  Tiny Flask Server (required for Render Web Service)
-# ========================
-
-app = Flask(__name__)
-
-@app.route("/")
-def home():
-    return "Bot is running!", 200
-
-
-def run_flask():
-    port = int(os.environ.get("PORT", 8000))
-    app.run(host="0.0.0.0", port=port)
-
 
 # ========================
 #  DATA
@@ -77,15 +58,7 @@ SOUNDS = [
     {"file_id": "CQACAgIAAxkBAANIaSv6ijn_8iFW-tzTxcnQNrP_kX0AAieMAAL58mBJeUqlBJkbGKs2BA", "title": "RDR2 | Low honor"},
     {"file_id": "CQACAgIAAxkBAANKaSv7QwOPOWZNeVRAZbs8tXIpyewAAi2MAAL58mBJJ8CzYz7lwdA2BA", "title": "It was perfect!"},
     {"file_id": "CQACAgIAAxkBAANNaSv88YYl43bD-ikjoTpe4U43-GAAAjiMAAL58mBJgpIg_pTNi3A2BA", "title": "Kurt Angle"},
-    # {"file_id": "", "title": ""},
-    # {"file_id": "", "title": ""},
-    # {"file_id": "", "title": ""},
-    # {"file_id": "", "title": ""},
-    # {"file_id": "", "title": ""},
-    # {"file_id": "", "title": ""},
-    # {"file_id": "", "title": ""},
 ]
-
 
 # ========================
 #  HANDLERS
@@ -143,13 +116,14 @@ def error_handler(update, context):
 
 
 # ========================
-#  START BOT + FLASK
+#  START BOT (WEBHOOK ON RENDER, POLLING LOCALLY)
 # ========================
 
-def run_bot():
-    token = os.getenv("BOT_TOKEN")
+def main():
+    # Use TOKEN (your choice B)
+    token = os.getenv("TOKEN")
     if not token:
-        raise RuntimeError("BOT_TOKEN not set!")
+        raise RuntimeError("TOKEN environment variable not set!")
 
     updater = Updater(token, use_context=True)
     dp = updater.dispatcher
@@ -158,13 +132,31 @@ def run_bot():
     dp.add_handler(MessageHandler(Filters.audio | Filters.voice, get_file_id))
     dp.add_error_handler(error_handler)
 
-    updater.start_polling(drop_pending_updates=True)
+    port = int(os.environ.get("PORT", "10000"))
+    external_url = os.environ.get("RENDER_EXTERNAL_URL")
+
+    if external_url:
+        # === RENDER: use webhook ===
+        # Webhook path uses the token (can be anything, but token is easy)
+        webhook_path = f"/{token}"
+        webhook_url = external_url.rstrip("/") + webhook_path
+
+        logger.info(f"Starting webhook on 0.0.0.0:{port}{webhook_path}")
+        logger.info(f"Setting webhook URL to: {webhook_url}")
+
+        updater.start_webhook(
+            listen="0.0.0.0",
+            port=port,
+            url_path=token,
+        )
+        updater.bot.set_webhook(webhook_url)
+    else:
+        # === LOCAL: fallback to long polling for easier testing ===
+        logger.info("RENDER_EXTERNAL_URL not set, starting in polling mode (local dev)")
+        updater.start_polling(drop_pending_updates=True)
+
     updater.idle()
 
 
 if __name__ == "__main__":
-    # Run Flask in a separate thread
-    Thread(target=run_flask).start()
-
-    # Run Telegram bot normally
-    run_bot()
+    main()
