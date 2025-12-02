@@ -17,6 +17,7 @@ from telegram.ext import (
 )
 from telegram.error import BadRequest
 
+
 # ========================
 #  Logging
 # ========================
@@ -26,6 +27,7 @@ logging.basicConfig(
     level=logging.INFO,
 )
 logger = logging.getLogger(__name__)
+
 
 # ========================
 #  DATA
@@ -60,8 +62,9 @@ SOUNDS = [
     {"file_id": "CQACAgIAAxkBAANNaSv88YYl43bD-ikjoTpe4U43-GAAAjiMAAL58mBJgpIg_pTNi3A2BA", "title": "Kurt Angle"},
 ]
 
+
 # ========================
-#  HANDLERS
+#  Inline & file-id Handlers
 # ========================
 
 def inline_query(update: Update, context: CallbackContext):
@@ -84,10 +87,10 @@ def inline_query(update: Update, context: CallbackContext):
         )
     )
 
-    # Filter
-    matched_sounds = [s for s in SOUNDS if query in s["title"].lower()] if query else SOUNDS
+    # Filter by query
+    matched = [s for s in SOUNDS if query in s["title"].lower()] if query else SOUNDS
 
-    for s in matched_sounds:
+    for s in matched:
         results.append(
             InlineQueryResultCachedAudio(
                 id=str(uuid.uuid4()),
@@ -116,14 +119,13 @@ def error_handler(update, context):
 
 
 # ========================
-#  START BOT (WEBHOOK ON RENDER, POLLING LOCALLY)
+#  START BOT (Webhook on Render, polling locally)
 # ========================
 
 def main():
-    # Use TOKEN (your choice B)
     token = os.getenv("TOKEN")
     if not token:
-        raise RuntimeError("TOKEN environment variable not set!")
+        raise RuntimeError("TOKEN env variable missing!")
 
     updater = Updater(token, use_context=True)
     dp = updater.dispatcher
@@ -136,8 +138,7 @@ def main():
     external_url = os.environ.get("RENDER_EXTERNAL_URL")
 
     if external_url:
-        # === RENDER: use webhook ===
-        # Webhook path uses the token (can be anything, but token is easy)
+        # RENDER → use webhook
         webhook_path = f"/{token}"
         webhook_url = external_url.rstrip("/") + webhook_path
 
@@ -148,11 +149,12 @@ def main():
             listen="0.0.0.0",
             port=port,
             url_path=token,
+            webhook_url=webhook_url
         )
-        updater.bot.set_webhook(webhook_url)
+
     else:
-        # === LOCAL: fallback to long polling for easier testing ===
-        logger.info("RENDER_EXTERNAL_URL not set, starting in polling mode (local dev)")
+        # Local → fallback to polling
+        logger.info("Local dev mode → polling")
         updater.start_polling(drop_pending_updates=True)
 
     updater.idle()
